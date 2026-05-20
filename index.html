@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SheetPortal — Manajemen Link Google Spreadsheet</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gs-green: #1a7f4e;
+      --gs-green-light: #e8f5ee;
+      --gs-green-mid: #34a853;
+      --gs-green-soft: #d4edda;
+      --sidebar-w: 230px;
+      --header-h: 58px;
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --border: #e8eaed;
+      --text-primary: #1a1f2e;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+      --shadow-hover: 0 8px 24px rgba(26,127,78,.14), 0 4px 8px rgba(0,0,0,.06);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ======================== HEADER ======================== */
+    .header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 21px;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .hamburger:hover { background: var(--bg); }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, #34a853, #1a7f4e);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { width: 17px; height: 17px; fill: white; }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .logo-text span { color: var(--gs-green); }
+
+    .header-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-badge {
+      background: var(--gs-green-light);
+      color: var(--gs-green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #34a853, #1a7f4e);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ======================== BODY ======================== */
+    .body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ======================== SIDEBAR ======================== */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      flex-shrink: 0;
+      overflow-y: auto;
+      transition: transform .25s ease;
+    }
+
+    .sidebar-section { margin-bottom: 4px; }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 10px 18px 5px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      font-weight: 500;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      position: relative;
+    }
+
+    .nav-item:hover { background: var(--bg); color: var(--text-primary); }
+
+    .nav-item.active {
+      background: var(--gs-green-light);
+      color: var(--gs-green);
+      font-weight: 600;
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 5px; bottom: 5px;
+      width: 3px;
+      background: var(--gs-green);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .nav-item i { font-size: 18px; flex-shrink: 0; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--gs-green-light);
+      color: var(--gs-green);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .nav-item.active .nav-badge { background: var(--gs-green); color: white; }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 16px;
+    }
+
+    .sidebar-info {
+      background: var(--gs-green-light);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .sidebar-info p {
+      font-size: 11px;
+      color: var(--gs-green);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* ======================== MAIN ======================== */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    /* ======================== PAGE ======================== */
+    .page { display: none; animation: fadeIn .2s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ======================== PAGE HEADER ======================== */
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .page-head-left h2 {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .page-head-left p { font-size: 12.5px; color: var(--text-secondary); }
+
+    .page-head-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ======================== SEARCH ======================== */
+    .search-wrap {
+      position: relative;
+      width: 280px;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 17px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 13px 9px 36px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus {
+      border-color: var(--gs-green);
+      box-shadow: 0 0 0 3px rgba(52,168,83,.12);
+    }
+
+    /* ======================== BUTTONS ======================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--gs-green);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #146b3e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26,127,78,.3);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-outline {
+      background: white;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--gs-green); color: var(--gs-green); background: var(--gs-green-light); }
+
+    .btn i { font-size: 17px; }
+
+    /* ======================== STATS ======================== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: box-shadow .15s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.green { background: var(--gs-green-light); color: var(--gs-green); }
+    .stat-icon.blue  { background: #e8f4fd; color: #2563eb; }
+    .stat-icon.amber { background: #fffbeb; color: #d97706; }
+
+    .stat-val { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 3px; }
+    .stat-lbl { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+    /* ======================== SECTION TITLE ======================== */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 14px;
+    }
+
+    /* ======================== CARD GRID ======================== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 18px;
+    }
+
+    /* ======================== SPREADSHEET CARD ======================== */
+    .ss-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow .22s ease, transform .22s ease, border-color .22s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ss-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-4px);
+      border-color: rgba(52,168,83,.35);
+    }
+
+    .ss-card:hover .card-overlay { opacity: 1; }
+    .ss-card:hover .card-overlay-btn { transform: translateY(0); opacity: 1; }
+
+    /* THUMBNAIL */
+    .card-thumb {
+      height: 130px;
+      background: #f0f4f0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-grid {
+      width: 100%;
+      height: 100%;
+      padding: 8px;
+      display: grid;
+      grid-template-rows: 22px repeat(4, 1fr);
+      gap: 2px;
+      background: #edf2ee;
+    }
+
+    .thumb-row {
+      display: grid;
+      grid-template-columns: 30px repeat(4, 1fr);
+      gap: 2px;
+    }
+
+    .thumb-cell { border-radius: 1px; background: white; }
+    .thumb-cell.h { background: #c6e8d2; }
+    .thumb-cell.f { background: rgba(52,168,83,.18); }
+    .thumb-cell.d { background: rgba(52,168,83,.32); }
+    .thumb-cell.n { background: #f0f4f0; }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(26,127,78,.07);
+      opacity: 0;
+      transition: opacity .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-overlay-btn {
+      background: var(--gs-green);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(26,127,78,.45);
+      transform: translateY(8px);
+      opacity: 0;
+      transition: transform .2s ease, opacity .2s;
+    }
+
+    /* CARD BODY */
+    .card-body {
+      padding: 13px 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
+    .gs-icon { width: 22px; height: 22px; flex-shrink: 0; margin-top: 1px; }
+
+    .card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .card-date { font-size: 11px; color: var(--text-muted); }
+
+    .card-status {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--gs-green-light);
+      color: var(--gs-green);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .open-link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gs-green);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .open-link-btn:hover { background: var(--gs-green-light); border-color: var(--gs-green); }
+    .open-link-btn i { font-size: 14px; }
+
+    /* ======================== EMPTY STATE ======================== */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .empty-state-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: var(--gs-green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .empty-state-icon i { font-size: 36px; color: var(--gs-green); opacity: .6; }
+    .empty-state h3 { font-size: 17px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+    /* ======================== MANAGE TABLE ======================== */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .table-head {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 130px 90px;
+      gap: 12px;
+      padding: 11px 18px;
+      background: #fafbfc;
+      border-bottom: 1px solid var(--border);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 130px 90px;
+      gap: 12px;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      transition: background .12s;
+      animation: fadeIn .2s ease;
+    }
+
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #fafcfb; }
+
+    .row-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    .row-name span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .row-link {
+      font-size: 12px;
+      color: #2563eb;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .row-link:hover { color: #1d4ed8; }
+
+    .row-date { font-size: 12px; color: var(--text-muted); }
+
+    .row-actions { display: flex; gap: 6px; }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 16px;
+      transition: all .12s;
+    }
+
+    .icon-btn:hover { border-color: var(--gs-green); color: var(--gs-green); background: var(--gs-green-light); }
+    .icon-btn.del:hover { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+
+    .manage-empty {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .manage-empty i { font-size: 36px; display: block; margin-bottom: 10px; opacity: .35; color: var(--gs-green); }
+
+    /* ======================== MODAL ======================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,20,35,.50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      padding: 16px;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 18px;
+      width: 500px;
+      max-width: 100%;
+      padding: 30px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+      transform: translateY(14px) scale(.97);
+      transition: transform .25s ease;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+    }
+
+    .modal-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--gs-green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gs-green);
+      font-size: 20px;
+      margin-right: 10px;
+    }
+
+    .modal-title-wrap { display: flex; align-items: center; }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+
+    .modal-close {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      transition: background .12s, color .12s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover { background: #fee2e2; color: #dc2626; }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .form-required { color: #dc2626; }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      background: var(--surface);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input:focus {
+      border-color: var(--gs-green);
+      box-shadow: 0 0 0 3px rgba(52,168,83,.12);
+    }
+
+    .form-input.error { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.08); }
+
+    .form-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 5px; }
+    .form-error { font-size: 11.5px; color: #dc2626; margin-top: 5px; display: none; font-weight: 500; }
+    .form-input.error ~ .form-error { display: block; }
+
+    .preview-box {
+      margin-top: 12px;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      background: var(--bg);
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      transition: all .2s;
+    }
+
+    .preview-box.valid {
+      border-color: var(--gs-green);
+      background: var(--gs-green-light);
+      color: var(--gs-green);
+      font-weight: 600;
+    }
+
+    .preview-box.invalid {
+      border-color: #f87171;
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .preview-box i { font-size: 20px; flex-shrink: 0; }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ======================== TOAST ======================== */
+    .toast-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 300;
+    }
+
+    .toast {
+      background: #1a1f2e;
+      color: white;
+      padding: 11px 18px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      animation: slideUp .25s ease;
+      box-shadow: var(--shadow-md);
+      max-width: 320px;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast.success i { color: #34a853; font-size: 18px; }
+    .toast.danger  i { color: #ea4335; font-size: 18px; }
+
+    /* ======================== RESPONSIVE ======================== */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: var(--header-h); left: 0; bottom: 0;
+        z-index: 150;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-md);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .main { padding: 18px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 13px; }
+      .table-head { grid-template-columns: 1fr 90px; }
+      .table-row { grid-template-columns: 1fr 90px; }
+      .th-link, .td-link, .th-date, .td-date { display: none !important; }
+      .page-head { flex-direction: column; align-items: flex-start; }
+      .search-wrap { width: 100%; }
+      .page-head-right { width: 100%; }
+      .header-subtitle, .header-divider { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .main { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ======================== HEADER ======================== -->
+  <header class="header">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+      <i class="ti ti-menu-2"></i>
+    </button>
+    <div class="logo" onclick="navigate('dashboard')">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 3h5v2h-5V6zm0 4h5v2h-5v-2zm0 4h5v2h-5v-2zM7 6h3v8H7V6zm0 10h10v2H7v-2z"/>
+        </svg>
+      </div>
+      <span class="logo-text">Sheet<span>Portal</span></span>
+    </div>
+    <div class="header-divider"></div>
+    <span class="header-subtitle">Sistem Manajemen Link Spreadsheet</span>
+    <div class="header-right">
+      <span class="header-badge">v1.0</span>
+      <div class="avatar" title="Admin">A</div>
+    </div>
+  </header>
+
+  <!-- ======================== BODY ======================== -->
+  <div class="body">
+
+    <!-- ======================== SIDEBAR ======================== -->
+    <nav class="sidebar" id="sidebar" aria-label="Menu navigasi">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Navigasi</div>
+        <button class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+          <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+          Dashboard
+          <span class="nav-badge" id="count-badge">0</span>
+        </button>
+        <button class="nav-item" onclick="navigate('manage')" id="nav-manage">
+          <i class="ti ti-table" aria-hidden="true"></i>
+          Manajemen Spreadsheet
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Aksi Cepat</div>
+        <button class="nav-item" onclick="openAddModal()">
+          <i class="ti ti-plus" aria-hidden="true"></i>
+          Tambah Spreadsheet
+        </button>
+        <button class="nav-item" onclick="navigate('dashboard'); document.getElementById('search-input').focus()">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          Cari Spreadsheet
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section">
+        <div style="padding: 8px 18px;">
+          <div class="sidebar-info">
+            <p>💡 Paste link Google Spreadsheet untuk menyimpan akses cepat ke file Anda.</p>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar overlay mobile -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;top:var(--header-h);z-index:140;background:rgba(0,0,0,.35)"></div>
+
+    <!-- ======================== MAIN ======================== -->
+    <main class="main" id="main-content">
+
+      <!-- ========= DASHBOARD PAGE ========= -->
+      <div class="page active" id="page-dashboard" role="main" aria-label="Halaman Dashboard">
+
+        <div class="page-head">
+          <div class="page-head-left">
+            <h2>Dashboard</h2>
+            <p>Semua spreadsheet Anda dalam satu tampilan</p>
+          </div>
+          <div class="page-head-right">
+            <div class="search-wrap">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" class="search-input" placeholder="Cari spreadsheet..." id="search-input"
+                oninput="filterCards()" aria-label="Cari spreadsheet">
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">
+              <i class="ti ti-plus" aria-hidden="true"></i> Tambah
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="ti ti-files" aria-hidden="true"></i></div>
+            <div>
+              <div class="stat-val" id="stat-total">0</div>
+              <div class="stat-lbl">Total Spreadsheet</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="ti ti-calendar-week" aria-hidden="true"></i></div>
+            <div>
+              <div class="stat-val" id="stat-week">0</div>
+              <div class="stat-lbl">Ditambah Minggu Ini</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber"><i class="ti ti-link" aria-hidden="true"></i></div>
+            <div>
+              <div class="stat-val" id="stat-active">0</div>
+              <div class="stat-lbl">Link Aktif</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title" id="grid-title">Semua Spreadsheet</div>
+        <div class="grid" id="card-grid" aria-label="Grid spreadsheet"></div>
+      </div>
+
+      <!-- ========= MANAGE PAGE ========= -->
+      <div class="page" id="page-manage" role="main" aria-label="Halaman Manajemen Spreadsheet">
+        <div class="page-head">
+          <div class="page-head-left">
+            <h2>Manajemen Spreadsheet</h2>
+            <p>Tambah, edit, atau hapus data spreadsheet</p>
+          </div>
+          <div class="page-head-right">
+            <button class="btn btn-primary" onclick="openAddModal()">
+              <i class="ti ti-plus" aria-hidden="true"></i> Tambah Baru
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>Nama Spreadsheet</div>
+            <div class="th-link">Link Google Spreadsheet</div>
+            <div class="th-date">Tanggal Ditambah</div>
+            <div>Aksi</div>
+          </div>
+          <div id="manage-list" aria-label="Daftar spreadsheet"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- ======================== MODAL ======================== -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon"><i class="ti ti-table" aria-hidden="true"></i></div>
+        <span class="modal-title" id="modal-title">Tambah Spreadsheet</span>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Tutup modal">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-name">
+        Nama Spreadsheet <span class="form-required">*</span>
+      </label>
+      <input type="text" class="form-input" id="f-name"
+        placeholder="Contoh: Laporan Keuangan Q1 2025"
+        oninput="clearErr('f-name')" autocomplete="off">
+      <div class="form-error" id="f-name-err">Nama tidak boleh kosong</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-url">
+        Link Google Spreadsheet <span class="form-required">*</span>
+      </label>
+      <input type="text" class="form-input" id="f-url"
+        placeholder="https://docs.google.com/spreadsheets/d/..."
+        oninput="onUrlInput()" autocomplete="off">
+      <div class="form-hint">Paste link Google Spreadsheet yang ingin disimpan</div>
+      <div class="form-error" id="f-url-err">Link tidak valid. Gunakan link dari Google Spreadsheet</div>
+      <div class="preview-box" id="url-preview">
+        <i class="ti ti-link" aria-hidden="true"></i>
+        <span id="preview-text">Preview validasi link akan muncul di sini</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveSpreadsheet()" id="save-btn">
+        <i class="ti ti-device-floppy" aria-hidden="true"></i>
+        <span id="save-btn-text">Simpan</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== TOAST ======================== -->
+<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+
+<!-- ======================== SUPABASE SDK ======================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // ================================================================
+  // KONFIGURASI SUPABASE
+  // ================================================================
+  const SUPABASE_URL = 'https://aijxwlqnajkmkkabhagd.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpanh3bHFuYWprbWtrYWJoYWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMjM3MzgsImV4cCI6MjA5NDc5OTczOH0.kImQVpxRgUBD3zy_qi9qcsub-xOXrKaWF36J91RysFI';
+  const TABLE        = 'spreadsheets';
+
+  // Inisialisasi Supabase client
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ================================================================
+  // STATE GLOBAL
+  // ================================================================
+  let data   = [];    // cache data dari Supabase
+  let editId = null;  // id item yang sedang diedit (null = mode tambah)
+
+  // ================================================================
+  // SVG ICON GOOGLE SHEETS
+  // ================================================================
+  const GS_ICON = `<svg class="gs-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M29 0H5a3 3 0 0 0-3 3v42a3 3 0 0 0 3 3h38a3 3 0 0 0 3-3V14L29 0z" fill="#21a366"/>
+    <path d="M29 0v14h14L29 0z" fill="#107c41"/>
+    <rect x="12" y="22" width="24" height="3" rx="1" fill="white" opacity=".75"/>
+    <rect x="12" y="28" width="24" height="3" rx="1" fill="white" opacity=".75"/>
+    <rect x="12" y="34" width="16" height="3" rx="1" fill="white" opacity=".75"/>
+  </svg>`;
+
+  // ================================================================
+  // UTILITAS
+  // ================================================================
+  function fmtDate(ts) {
+    return new Date(ts).toLocaleDateString('id-ID', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+  }
+
+  function isThisWeek(ts) {
+    return new Date(ts) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  }
+
+  function getThumbnailUrl(url) {
+    const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    if (!m) return null;
+    return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=png&r=0&c=0&s=5`;
+  }
+
+  function isValidGSUrl(url) {
+    return url && url.includes('docs.google.com/spreadsheets');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ================================================================
+  // LOADING STATE
+  // ================================================================
+  function setLoading(on) {
+    if (!on) return;
+    const spinner = `
+      <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-muted)">
+        <i class="ti ti-loader-2" style="font-size:32px;display:block;margin-bottom:10px;
+           animation:spin 1s linear infinite" aria-hidden="true"></i>
+        Memuat data dari Supabase…
+      </div>`;
+    const grid   = document.getElementById('card-grid');
+    const manage = document.getElementById('manage-list');
+    if (grid)   grid.innerHTML   = spinner;
+    if (manage) manage.innerHTML = spinner;
+    document.getElementById('stat-total').textContent  = '…';
+    document.getElementById('stat-week').textContent   = '…';
+    document.getElementById('stat-active').textContent = '…';
+    document.getElementById('count-badge').textContent = '…';
+  }
+
+  // ================================================================
+  // READ — ambil semua data dari Supabase
+  // ================================================================
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const { data: rows, error } = await sb
+        .from(TABLE)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('[SheetPortal] READ error:', error.message);
+        showToast('Gagal memuat data: ' + error.message, 'danger');
+        data = [];
+      } else {
+        // Normalisasi field Supabase → format lokal
+        data = (rows || []).map(r => ({
+          id:      r.id,
+          name:    r.name,
+          url:     r.url,
+          created: r.created_at,
+        }));
+        console.log('[SheetPortal] READ ok, jumlah data:', data.length);
+      }
+    } catch (err) {
+      console.error('[SheetPortal] Unexpected READ error:', err);
+      showToast('Terjadi kesalahan jaringan', 'danger');
+      data = [];
+    }
+    renderAll();
+  }
+
+  // ================================================================
+  // CREATE — tambah data baru ke Supabase
+  // ================================================================
+  async function createItem(name, url) {
+    try {
+      const { data: inserted, error } = await sb
+        .from(TABLE)
+        .insert([{ name, url }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SheetPortal] CREATE error:', error.message);
+        showToast('Gagal menyimpan: ' + error.message, 'danger');
+        return false;
+      }
+      console.log('[SheetPortal] CREATE ok:', inserted);
+      return true;
+    } catch (err) {
+      console.error('[SheetPortal] Unexpected CREATE error:', err);
+      showToast('Terjadi kesalahan saat menyimpan', 'danger');
+      return false;
+    }
+  }
+
+  // ================================================================
+  // UPDATE — perbarui data di Supabase berdasarkan id
+  // ================================================================
+  async function updateItem(id, name, url) {
+    try {
+      const { data: updated, error } = await sb
+        .from(TABLE)
+        .update({ name, url })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SheetPortal] UPDATE error:', error.message);
+        showToast('Gagal memperbarui: ' + error.message, 'danger');
+        return false;
+      }
+      console.log('[SheetPortal] UPDATE ok:', updated);
+      return true;
+    } catch (err) {
+      console.error('[SheetPortal] Unexpected UPDATE error:', err);
+      showToast('Terjadi kesalahan saat memperbarui', 'danger');
+      return false;
+    }
+  }
+
+  // ================================================================
+  // DELETE — hapus data dari Supabase berdasarkan id
+  // ================================================================
+  async function deleteItemDB(id) {
+    try {
+      const { error } = await sb
+        .from(TABLE)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SheetPortal] DELETE error:', error.message);
+        showToast('Gagal menghapus: ' + error.message, 'danger');
+        return false;
+      }
+      console.log('[SheetPortal] DELETE ok, id:', id);
+      return true;
+    } catch (err) {
+      console.error('[SheetPortal] Unexpected DELETE error:', err);
+      showToast('Terjadi kesalahan saat menghapus', 'danger');
+      return false;
+    }
+  }
+
+  // ================================================================
+  // RENDER STATS
+  // ================================================================
+  function renderStats() {
+    document.getElementById('stat-total').textContent  = data.length;
+    document.getElementById('stat-week').textContent   = data.filter(d => isThisWeek(d.created)).length;
+    document.getElementById('stat-active').textContent = data.length;
+    document.getElementById('count-badge').textContent = data.length;
+  }
+
+  // ================================================================
+  // RENDER CARD GRID (Dashboard)
+  // ================================================================
+  function makeFakeGrid() {
+    const patterns = [
+      ['h','h','h','h','h'],
+      ['n','f','d','f','n'],
+      ['n','d','f','n','f'],
+      ['n','f','n','d','f'],
+      ['n','n','f','f','d'],
+    ];
+    return patterns.map(row =>
+      `<div class="thumb-row">
+        ${['n', ...row].map(c => `<div class="thumb-cell ${c}"></div>`).join('')}
+      </div>`
+    ).join('');
+  }
+
+  function renderCardGrid(list) {
+    const grid  = document.getElementById('card-grid');
+    const title = document.getElementById('grid-title');
+
+    title.textContent = list.length === data.length
+      ? `Semua Spreadsheet (${data.length})`
+      : `Hasil Pencarian (${list.length})`;
+
+    if (!list.length) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="ti ti-table-off" aria-hidden="true"></i>
+          </div>
+          <h3>${data.length === 0 ? 'Belum ada spreadsheet' : 'Tidak ditemukan'}</h3>
+          <p>${data.length === 0
+            ? 'Mulai dengan menambahkan spreadsheet pertama Anda.'
+            : 'Coba kata kunci lain.'}</p>
+          ${data.length === 0
+            ? `<button class="btn btn-primary" onclick="openAddModal()">
+                <i class="ti ti-plus"></i> Tambah Spreadsheet
+               </button>`
+            : ''}
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(item => {
+      const thumb = getThumbnailUrl(item.url);
+      const safeUrl  = escHtml(item.url);
+      const safeName = escHtml(item.name);
+      return `
+        <article class="ss-card" tabindex="0" aria-label="${safeName}"
+          onkeydown="if(event.key==='Enter') openSheet('${safeUrl}')">
+          <div class="card-thumb">
+            ${thumb
+              ? `<img src="${thumb}" alt="Preview ${safeName}" loading="lazy"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`
+              : ''}
+            <div class="thumb-grid" style="${thumb ? 'display:none' : ''}">${makeFakeGrid()}</div>
+            <div class="card-overlay">
+              <button class="card-overlay-btn" onclick="openSheet('${safeUrl}')"
+                aria-label="Buka ${safeName}">
+                <i class="ti ti-external-link" aria-hidden="true"></i> Buka
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-top">
+              ${GS_ICON}
+              <div class="card-name">${safeName}</div>
+            </div>
+            <div class="card-meta">
+              <span class="card-date">${fmtDate(item.created)}</span>
+              <span class="card-status">Aktif</span>
+            </div>
+            <button class="open-link-btn" onclick="openSheet('${safeUrl}')"
+              aria-label="Buka ${safeName} di tab baru">
+              <i class="ti ti-external-link" aria-hidden="true"></i> Buka Spreadsheet
+            </button>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  // ================================================================
+  // RENDER MANAGE LIST (Tabel)
+  // ================================================================
+  function renderManageList() {
+    const el = document.getElementById('manage-list');
+
+    if (!data.length) {
+      el.innerHTML = `
+        <div class="manage-empty">
+          <i class="ti ti-table-off" aria-hidden="true"></i>
+          Belum ada spreadsheet. Klik "Tambah Baru" untuk memulai.
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = data.map(item => {
+      const safeUrl  = escHtml(item.url);
+      const safeName = escHtml(item.name);
+      return `
+        <div class="table-row" id="row-${item.id}">
+          <div class="row-name">
+            ${GS_ICON}
+            <span title="${safeName}">${safeName}</span>
+          </div>
+          <div class="td-link row-link"
+            onclick="openSheet('${safeUrl}')"
+            title="${safeUrl}"
+            role="link" tabindex="0"
+            onkeydown="if(event.key==='Enter') openSheet('${safeUrl}')">
+            ${safeUrl}
+          </div>
+          <div class="td-date row-date">${fmtDate(item.created)}</div>
+          <div class="row-actions">
+            <button class="icon-btn" onclick="openEditModal('${item.id}')"
+              title="Edit" aria-label="Edit ${safeName}">
+              <i class="ti ti-edit" aria-hidden="true"></i>
+            </button>
+            <button class="icon-btn del" onclick="deleteItem('${item.id}')"
+              title="Hapus" aria-label="Hapus ${safeName}">
+              <i class="ti ti-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ================================================================
+  // RENDER SEMUA
+  // ================================================================
+  function renderAll() {
+    renderStats();
+    filterCards();
+    renderManageList();
+  }
+
+  // ================================================================
+  // SEARCH / FILTER
+  // ================================================================
+  function filterCards() {
+    const q = (document.getElementById('search-input').value || '').toLowerCase().trim();
+    const filtered = q
+      ? data.filter(d =>
+          d.name.toLowerCase().includes(q) ||
+          d.url.toLowerCase().includes(q))
+      : data;
+    renderCardGrid(filtered);
+  }
+
+  // ================================================================
+  // NAVIGASI HALAMAN
+  // ================================================================
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    closeSidebarMobile();
+  }
+
+  function toggleSidebar() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebar-overlay');
+    if (s.classList.toggle('open')) {
+      o.style.display = 'block';
+    } else {
+      o.style.display = 'none';
+    }
+  }
+
+  function closeSidebarMobile() {
+    if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').style.display = 'none';
+    }
+  }
+
+  // ================================================================
+  // BUKA SPREADSHEET
+  // ================================================================
+  function openSheet(url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  // ================================================================
+  // MODAL — Tambah
+  // ================================================================
+  function openAddModal() {
+    editId = null;
+    document.getElementById('modal-title').textContent   = 'Tambah Spreadsheet';
+    document.getElementById('save-btn-text').textContent = 'Simpan';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-url').value  = '';
+    clearErr('f-name');
+    clearErr('f-url');
+    resetPreview();
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('f-name').focus(), 260);
+  }
+
+  // ================================================================
+  // MODAL — Edit
+  // ================================================================
+  function openEditModal(id) {
+    editId = id;
+    const item = data.find(d => d.id === id);
+    if (!item) return;
+    document.getElementById('modal-title').textContent   = 'Edit Spreadsheet';
+    document.getElementById('save-btn-text').textContent = 'Perbarui';
+    document.getElementById('f-name').value = item.name;
+    document.getElementById('f-url').value  = item.url;
+    clearErr('f-name');
+    clearErr('f-url');
+    onUrlInput();
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('f-name').focus(), 260);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target.id === 'modal-overlay') closeModal();
+  }
+
+  function clearErr(id) {
+    document.getElementById(id).classList.remove('error');
+  }
+
+  function resetPreview() {
+    const p = document.getElementById('url-preview');
+    p.className = 'preview-box';
+    p.querySelector('i').className = 'ti ti-link';
+    document.getElementById('preview-text').textContent = 'Preview validasi link akan muncul di sini';
+  }
+
+  function onUrlInput() {
+    clearErr('f-url');
+    const url  = document.getElementById('f-url').value.trim();
+    const p    = document.getElementById('url-preview');
+    const icon = p.querySelector('i');
+    const text = document.getElementById('preview-text');
+
+    if (!url) { resetPreview(); return; }
+
+    if (isValidGSUrl(url)) {
+      p.className      = 'preview-box valid';
+      icon.className   = 'ti ti-circle-check';
+      text.textContent = '✓ Link Google Spreadsheet valid dan siap disimpan';
+    } else {
+      p.className      = 'preview-box invalid';
+      icon.className   = 'ti ti-alert-circle';
+      text.textContent = '✗ Bukan link Google Spreadsheet yang valid';
+    }
+  }
+
+  // ================================================================
+  // SIMPAN — CREATE atau UPDATE
+  // ================================================================
+  async function saveSpreadsheet() {
+    const name = document.getElementById('f-name').value.trim();
+    const url  = document.getElementById('f-url').value.trim();
+    let valid  = true;
+
+    if (!name) {
+      document.getElementById('f-name').classList.add('error');
+      valid = false;
+    }
+    if (!url || !isValidGSUrl(url)) {
+      document.getElementById('f-url').classList.add('error');
+      valid = false;
+    }
+    if (!valid) return;
+
+    // Nonaktifkan tombol selama proses berlangsung
+    const btn = document.getElementById('save-btn');
+    btn.disabled      = true;
+    btn.style.opacity = '0.7';
+
+    let ok = false;
+
+    if (editId) {
+      // UPDATE
+      ok = await updateItem(editId, name, url);
+      if (ok) showToast('Spreadsheet berhasil diperbarui', 'success');
+    } else {
+      // CREATE
+      ok = await createItem(name, url);
+      if (ok) showToast('Spreadsheet berhasil ditambahkan', 'success');
+    }
+
+    btn.disabled      = false;
+    btn.style.opacity = '1';
+
+    if (ok) {
+      closeModal();
+      await fetchData(); // refresh dari Supabase agar data sinkron
+    }
+  }
+
+  // ================================================================
+  // HAPUS
+  // ================================================================
+  async function deleteItem(id) {
+    const item = data.find(d => d.id === id);
+    if (!item) return;
+
+    if (!confirm(`Hapus "${item.name}"?\n\nTindakan ini tidak dapat dibatalkan.`)) return;
+
+    const ok = await deleteItemDB(id);
+    if (ok) {
+      showToast('Spreadsheet berhasil dihapus', 'danger');
+      await fetchData(); // refresh dari Supabase agar data sinkron
+    }
+  }
+
+  // ================================================================
+  // TOAST NOTIFIKASI
+  // ================================================================
+  function showToast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const t    = document.createElement('div');
+    t.className = 'toast ' + type;
+    const iconName = type === 'success' ? 'circle-check' : 'circle-x';
+    t.innerHTML = `<i class="ti ti-${iconName}" aria-hidden="true"></i>${msg}`;
+    wrap.appendChild(t);
+
+    setTimeout(() => {
+      t.style.opacity    = '0';
+      t.style.transform  = 'translateY(10px)';
+      t.style.transition = 'all .22s ease';
+      setTimeout(() => t.remove(), 240);
+    }, 3000);
+  }
+
+  // ================================================================
+  // KEYBOARD SHORTCUT
+  // ================================================================
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ================================================================
+  // INIT — ambil data dari Supabase saat halaman pertama dimuat
+  // ================================================================
+  fetchData();
+</script>
+</body>
+</html>
