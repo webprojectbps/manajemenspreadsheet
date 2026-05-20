@@ -948,20 +948,6 @@
       <div class="sidebar-divider"></div>
 
       <div class="sidebar-section">
-        <div class="sidebar-label">Aksi Cepat</div>
-        <button class="nav-item" onclick="openAddModal()">
-          <i class="ti ti-plus" aria-hidden="true"></i>
-          Tambah Spreadsheet
-        </button>
-        <button class="nav-item" onclick="navigate('dashboard'); document.getElementById('search-input').focus()">
-          <i class="ti ti-search" aria-hidden="true"></i>
-          Cari Spreadsheet
-        </button>
-      </div>
-
-      <div class="sidebar-divider"></div>
-
-      <div class="sidebar-section">
         <div style="padding: 8px 18px;">
           <div class="sidebar-info">
             <p>💡 Paste link Google Spreadsheet untuk menyimpan akses cepat ke file Anda.</p>
@@ -990,9 +976,6 @@
               <input type="text" class="search-input" placeholder="Cari spreadsheet..." id="search-input"
                 oninput="filterCards()" aria-label="Cari spreadsheet">
             </div>
-            <button class="btn btn-primary" onclick="openAddModal()">
-              <i class="ti ti-plus" aria-hidden="true"></i> Tambah
-            </button>
           </div>
         </div>
 
@@ -1117,15 +1100,14 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpanh3bHFuYWprbWtrYWJoYWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMjM3MzgsImV4cCI6MjA5NDc5OTczOH0.kImQVpxRgUBD3zy_qi9qcsub-xOXrKaWF36J91RysFI';
   const TABLE        = 'spreadsheets';
 
-  // Inisialisasi Supabase client
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ================================================================
   // STATE GLOBAL
   // ================================================================
-  let data   = [];    // cache data dari Supabase
-  let editId = null;  // id item yang sedang diedit (null = mode tambah)
+  let data   = [];
+  let editId = null;
 
   // ================================================================
   // SVG ICON GOOGLE SHEETS
@@ -1191,7 +1173,7 @@
   }
 
   // ================================================================
-  // READ — ambil semua data dari Supabase
+  // READ
   // ================================================================
   async function fetchData() {
     setLoading(true);
@@ -1206,14 +1188,12 @@
         showToast('Gagal memuat data: ' + error.message, 'danger');
         data = [];
       } else {
-        // Normalisasi field Supabase → format lokal
         data = (rows || []).map(r => ({
           id:      r.id,
           name:    r.name,
           url:     r.url,
           created: r.created_at,
         }));
-        console.log('[SheetPortal] READ ok, jumlah data:', data.length);
       }
     } catch (err) {
       console.error('[SheetPortal] Unexpected READ error:', err);
@@ -1224,7 +1204,7 @@
   }
 
   // ================================================================
-  // CREATE — tambah data baru ke Supabase
+  // CREATE
   // ================================================================
   async function createItem(name, url) {
     try {
@@ -1235,21 +1215,18 @@
         .single();
 
       if (error) {
-        console.error('[SheetPortal] CREATE error:', error.message);
         showToast('Gagal menyimpan: ' + error.message, 'danger');
         return false;
       }
-      console.log('[SheetPortal] CREATE ok:', inserted);
       return true;
     } catch (err) {
-      console.error('[SheetPortal] Unexpected CREATE error:', err);
       showToast('Terjadi kesalahan saat menyimpan', 'danger');
       return false;
     }
   }
 
   // ================================================================
-  // UPDATE — perbarui data di Supabase berdasarkan id
+  // UPDATE
   // ================================================================
   async function updateItem(id, name, url) {
     try {
@@ -1261,21 +1238,18 @@
         .single();
 
       if (error) {
-        console.error('[SheetPortal] UPDATE error:', error.message);
         showToast('Gagal memperbarui: ' + error.message, 'danger');
         return false;
       }
-      console.log('[SheetPortal] UPDATE ok:', updated);
       return true;
     } catch (err) {
-      console.error('[SheetPortal] Unexpected UPDATE error:', err);
       showToast('Terjadi kesalahan saat memperbarui', 'danger');
       return false;
     }
   }
 
   // ================================================================
-  // DELETE — hapus data dari Supabase berdasarkan id
+  // DELETE
   // ================================================================
   async function deleteItemDB(id) {
     try {
@@ -1285,14 +1259,11 @@
         .eq('id', id);
 
       if (error) {
-        console.error('[SheetPortal] DELETE error:', error.message);
         showToast('Gagal menghapus: ' + error.message, 'danger');
         return false;
       }
-      console.log('[SheetPortal] DELETE ok, id:', id);
       return true;
     } catch (err) {
-      console.error('[SheetPortal] Unexpected DELETE error:', err);
       showToast('Terjadi kesalahan saat menghapus', 'danger');
       return false;
     }
@@ -1309,7 +1280,7 @@
   }
 
   // ================================================================
-  // RENDER CARD GRID (Dashboard)
+  // RENDER CARD GRID
   // ================================================================
   function makeFakeGrid() {
     const patterns = [
@@ -1342,11 +1313,11 @@
           </div>
           <h3>${data.length === 0 ? 'Belum ada spreadsheet' : 'Tidak ditemukan'}</h3>
           <p>${data.length === 0
-            ? 'Mulai dengan menambahkan spreadsheet pertama Anda.'
+            ? 'Pergi ke Manajemen Spreadsheet untuk menambahkan spreadsheet baru.'
             : 'Coba kata kunci lain.'}</p>
           ${data.length === 0
-            ? `<button class="btn btn-primary" onclick="openAddModal()">
-                <i class="ti ti-plus"></i> Tambah Spreadsheet
+            ? `<button class="btn btn-primary" onclick="navigate('manage')">
+                <i class="ti ti-table"></i> Ke Manajemen Spreadsheet
                </button>`
             : ''}
         </div>`;
@@ -1392,7 +1363,7 @@
   }
 
   // ================================================================
-  // RENDER MANAGE LIST (Tabel)
+  // RENDER MANAGE LIST
   // ================================================================
   function renderManageList() {
     const el = document.getElementById('manage-list');
@@ -1585,7 +1556,6 @@
     }
     if (!valid) return;
 
-    // Nonaktifkan tombol selama proses berlangsung
     const btn = document.getElementById('save-btn');
     btn.disabled      = true;
     btn.style.opacity = '0.7';
@@ -1593,11 +1563,9 @@
     let ok = false;
 
     if (editId) {
-      // UPDATE
       ok = await updateItem(editId, name, url);
       if (ok) showToast('Spreadsheet berhasil diperbarui', 'success');
     } else {
-      // CREATE
       ok = await createItem(name, url);
       if (ok) showToast('Spreadsheet berhasil ditambahkan', 'success');
     }
@@ -1607,7 +1575,7 @@
 
     if (ok) {
       closeModal();
-      await fetchData(); // refresh dari Supabase agar data sinkron
+      await fetchData();
     }
   }
 
@@ -1623,7 +1591,7 @@
     const ok = await deleteItemDB(id);
     if (ok) {
       showToast('Spreadsheet berhasil dihapus', 'danger');
-      await fetchData(); // refresh dari Supabase agar data sinkron
+      await fetchData();
     }
   }
 
@@ -1654,7 +1622,7 @@
   });
 
   // ================================================================
-  // INIT — ambil data dari Supabase saat halaman pertama dimuat
+  // INIT
   // ================================================================
   fetchData();
 </script>
